@@ -22,7 +22,7 @@ function Sidebar() {
 
         } catch (e) {
             Swal.fire({
-                title: 'error',
+                title: 'ERROR',
                 text: e.message,
                 icon: 'error'
             })
