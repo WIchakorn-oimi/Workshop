@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef,useState } from "react";
 import BackOffice from "../../components/BackOffice"
 import MyModal from "../../components/MyModal";
 import Swal from "sweetalert2";
@@ -9,6 +9,9 @@ function Product() {
     const [product, setProduct] = useState({});
     const [products, setProducts] = useState({});
     const [img, setImg] = useState({});
+    const [fileExcel, setFileExcel] = useState({});
+    const refImg = useRef();
+    const refExcel = useRef();
 
     useEffect(() => {
         fetchData();
@@ -35,6 +38,8 @@ function Product() {
                 text: e.message,
                 icon: 'error'
             })
+
+            return "";
         }
     }
 
@@ -56,7 +61,7 @@ function Product() {
                     title: 'save',
                     text: 'success',
                     icon: 'success',
-                    timer: 2000
+                    timer: 1000
                 })
                 document.getElementById('modalProduct_btnClose').click();
                 fetchData();
@@ -94,6 +99,8 @@ function Product() {
             price:'',
             cost: ''
         })
+        setImg({});
+        refImg.current.value = '';
     }
 
     const heandleRemove = async (item) => {
@@ -113,7 +120,7 @@ function Product() {
                         title: 'remove',
                         text: 'remove success',
                         icon: 'success',
-                        timer: 2000
+                        timer: 1000
                     })
 
                     fetchData();
@@ -136,6 +143,59 @@ function Product() {
         }
     }
 
+    function showImge(item) {
+        if (item.img !== "") {
+            return <img className="img-thumbnail" src={config.apiPath + '/uploads/' + item.img}/>
+        }
+        
+        return <></>
+    }
+
+    const selectedFileExcel = (fileInput) => {  
+        if (fileInput !== undefined){
+            if (fileInput.length > 0) {
+                setFileExcel(fileInput[0]);
+            }
+        }
+    }
+
+    const handleUploadExcel = async () => {
+        try {
+            const formData = new FormData();
+            formData.append('fileExcel', fileExcel);
+
+            const res = await axios.post(config.apiPath + '/product/uploadFromExcel', formData, {
+                headers: {
+                    'Content-Type': 'mltipart/form-data',
+                    'Authorization': localStorage.getItem('token')
+                }
+            });
+
+            if (res.data.message === 'success') {
+                Swal.fire({
+                    title: 'upload file',
+                    text: 'upload success',
+                    icon: 'success',
+                    timer: 1000
+                });
+
+                fetchData();
+
+                document.getElementById('modalExcel_btnClose').click();
+            }
+        } catch (e) {
+            Swal.fire({
+                title: 'error',
+                text: e.message,
+                icon: 'error'
+            })
+        }
+    }
+
+    const clearFormExcel = () => {
+        refExcel.current.value = "";
+        setFileExcel(null);
+    }
 
     return <BackOffice>
         <div className="h4">Product</div>
@@ -143,7 +203,7 @@ function Product() {
             <i className="fa fa-plus mr-2"></i>  Add item
         </button>
 
-        <button className="btn btn-success">
+        <button onClick={clearFormExcel} className="btn btn-success"  data-toggle='modal' data-target='#modalExcel'>
             <i class="fa-sharp fa-regular fa-file-excel mr-2"></i>Import form Excle
         </button>
 
@@ -151,22 +211,19 @@ function Product() {
         <table className="nt-3 table table-brodered table-striped">
             <thead>
                 <tr>
-                    <th>Product IMG</th>
+                    <th width='150px'>Product IMG</th>
                     <th>name</th>
                     <th width='150px' className="text-right">cost</th>
                     <th width='150px' className="text-right">price</th>
                     <th width='140px'></th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody >
                 { products.length > 0 ? products.map(item =>
                     <tr key={item.id}>
-                        <td>{item.img !== undefined ? 
-                            <img className="img-thumbnail width_img" src={config.apiPath + '/uploads/' + item.img}/>
-                            : <></>}
-                        </td>
+                        <td>{showImge(item)}</td>
                         <td>{item.name}</td>
-                        <td className="text-right">{item.cost}</td>
+                        <td className="text-right ">{item.cost}</td>
                         <td className="text-right">{item.price}</td>
                         <td className="text-center">
                             <button className="='btn btn-primary mr-2" data-toggle='modal' data-target='#modalProduct' onClick={e => setProduct(item)}>
@@ -197,7 +254,7 @@ function Product() {
                 </div>
                 <div className="mt-3">
                     Product img
-                    <input className="form-control" type="file" onChange={e => selectedFile(e.target.files)} />
+                    <input className="form-control" type="file" ref={refImg} onChange={e => selectedFile(e.target.files)} />
                 </div>
             </div>
             <div className="mt-3">
@@ -205,6 +262,15 @@ function Product() {
                     <i className="fa fa-check mr-2"></i>Save
                 </button>
             </div>
+        </MyModal>
+
+        <MyModal id='modalExcel' title='Select file'>
+                <div>Select file Excel</div>
+                <input className="input-group-text" type="file" ref={refExcel} onChange={e => selectedFileExcel(e.target.files)}/>
+
+                <button className="mt-3 btn btn-primary" onClick={handleUploadExcel}>
+                    <i className="fa fa-check mr-2"></i>Save
+                </button>
         </MyModal>
     </BackOffice>
 }
