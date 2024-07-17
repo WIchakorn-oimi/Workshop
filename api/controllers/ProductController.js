@@ -6,6 +6,7 @@ const jwt = require('jsonwebtoken');
 const dotenv = require('dotenv');
 const { parse } = require('path');
 const fileUpload = require('express-fileupload');
+const exclejs = require('exceljs')
 
 
 dotenv.config();
@@ -102,6 +103,46 @@ app.post('/upload', async (req, res) => {
         } else  {
             res.status(501).send('notimplemented');
         } 
+    } catch (e){
+        res.status(500).send({ error: e.message });
+    }
+})
+
+app.post('/uploadFromExcel', (req, res) => {
+    try{
+        const fileExcel = req.files.fileExcel;
+
+        fileExcel.mv('./uploads/' + fileExcel.name, async (err) => {
+            if (err) throw err;
+
+            const workbook = new exclejs.Workbook();
+            await workbook.xlsx.readFile('./uploads/' + fileExcel.name);
+
+            const ws = workbook.getWorksheet(1);
+
+            for (let i = 2; i <= ws.rowCount; i++) {
+                const name = ws.getRow(i).getCell(1).value ?? "";
+                const cost = ws.getRow(i).getCell(2).value ?? 0;
+                const price = ws.getRow(i).getCell(3).value ?? 0;
+
+                if (name !== "" && cost >= 0 && price >= 0) {   
+                    await prisma.product.create({
+                        data: {
+                            name: name,
+                            cost: cost,
+                            price: price,
+                            img: ''
+                        }
+                    })
+                }
+            }
+
+            //remove file from server//
+            const fs = require('fs');
+            await fs.unlinkSync('./uploads/' + fileExcel.name);
+
+            res.send({ message: 'success'})
+        })
     } catch (e){
         res.status(500).send({ error: e.message });
     }
