@@ -57,10 +57,10 @@ function Sidebar() {
     return <>
         <aside className="main-sidebar sidebar-dark-primary elevation-4">
 
-            <a href="index3.html" className="brand-link">
+            <Link to="/home" className="brand-link">
                 <img src="dist/img/AdminLTELogo.png" alt="AdminLTE Logo" className="brand-image img-circle elevation-3" style={{ opacity: ".8" }} />
-                <span className="brand-text font-weight-light">AdminLTE 3</span>
-            </a>
+                <span className="brand-text font-weight-light">BackOffice</span>
+            </Link>
 
 
             <div className="sidebar">
@@ -69,9 +69,9 @@ function Sidebar() {
                         <img src="dist/img/user2-160x160.jpg" className="img-circle elevation-2" alt="User Image" />
                     </div>
                     <div className="info">
-                        <a href="#" className="d-block">
+                        <Link to="#" className="d-block">
                             {user.name}
-                        </a>
+                        </Link>
                         <button className="btn btn-danger" onClick={hendleSingOut}>
                             <i className="fa fa-times mr-2"></i>Sing Out
                         </button>
@@ -85,6 +85,14 @@ function Sidebar() {
                             Menu
                         </li>
                         <li className="nav-item">
+                            <Link to="/dashboard" className="nav-link">
+                                <i className="nav-icon fas fa-columns"></i>
+                                <p>
+                                    DashBoard
+                                </p>
+                            </Link>
+                        </li>
+                        <li className="nav-item">
                             <Link to="/product" className="nav-link">
                                 <i className="nav-icon far fa-box"></i>
                                 <p>
@@ -94,21 +102,14 @@ function Sidebar() {
                             </Link>
                         </li>
                         <li className="nav-item">
-                            <a href="pages/gallery.html" className="nav-link">
-                                <i className="nav-icon far fa-image"></i>
+                            <Link to="/billSale" className="nav-link">
+                                <i className="nav-icon far fa-list"></i>
                                 <p>
-                                    Gallery
+                                    Sales report
                                 </p>
-                            </a>
+                            </Link>
                         </li>
-                        <li className="nav-item">
-                            <a href="pages/kanban.html" className="nav-link">
-                                <i className="nav-icon fas fa-columns"></i>
-                                <p>
-                                    Kanban Board
-                                </p>
-                            </a>
-                        </li>
+  
                     </ul>
                 </nav>
             </div>
