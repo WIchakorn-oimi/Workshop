@@ -60,12 +60,27 @@ app.delete('/remove/:id', async (req, res) => {
 
 app.put('/update', async (req, res) => {
     try {
+        const fs = require('fs');
+        const oldData = await prisma.product.findFirst({
+            where: {
+                id: parseInt(req.body.id)
+            }
+        });
+        
+        const imgePath = './uploads' + oldData.img;
+
+        if (oldData.img !== "") {
+            if (fs.existsSync(imgePath)) {
+                await fs.unlinkSync(imgePath);
+            }
+        }
+
         await prisma.product.update({
             data: req.body,
             where: {
                 id:parseInt(req.body.id)
             }
-        })
+        });
 
         res.send({ message: 'success' })
     } catch (e){
@@ -112,37 +127,46 @@ app.post('/uploadFromExcel', (req, res) => {
     try{
         const fileExcel = req.files.fileExcel;
 
-        fileExcel.mv('./uploads/' + fileExcel.name, async (err) => {
-            if (err) throw err;
+        if(fileExcel != undefined) {
+            if(fileExcel != null){ 
 
-            const workbook = new exclejs.Workbook();
-            await workbook.xlsx.readFile('./uploads/' + fileExcel.name);
+                fileExcel.mv('./uploads/' + fileExcel.name, async (err) => {
+                    if (err) throw err;
 
-            const ws = workbook.getWorksheet(1);
+                    const workbook = new exclejs.Workbook();
+                    await workbook.xlsx.readFile('./uploads/' + fileExcel.name);
 
-            for (let i = 2; i <= ws.rowCount; i++) {
-                const name = ws.getRow(i).getCell(1).value ?? "";
-                const cost = ws.getRow(i).getCell(2).value ?? 0;
-                const price = ws.getRow(i).getCell(3).value ?? 0;
+                    const ws = workbook.getWorksheet(1);
 
-                if (name !== "" && cost >= 0 && price >= 0) {   
-                    await prisma.product.create({
-                        data: {
-                            name: name,
-                            cost: cost,
-                            price: price,
-                            img: ''
+                    for (let i = 2; i <= ws.rowCount; i++) {
+                        const name = ws.getRow(i).getCell(1).value ?? "";
+                        const cost = ws.getRow(i).getCell(2).value ?? 0;
+                        const price = ws.getRow(i).getCell(3).value ?? 0;
+
+                        if (name !== "" && cost >= 0 && price >= 0) {   
+                            await prisma.product.create({
+                                data: {
+                                    name: name,
+                                    cost: cost,
+                                    price: price,
+                                    img: ''
+                                }
+                            })
                         }
-                    })
-                }
+                    }
+
+                    //remove file from server//
+                    const fs = require('fs');
+                    await fs.unlinkSync('./uploads/' + fileExcel.name);
+
+                    res.send({ message: 'success'})
+                })
+            } else {
+                res.status(500).send({message: 'fileExcel is null'});
             }
-
-            //remove file from server//
-            const fs = require('fs');
-            await fs.unlinkSync('./uploads/' + fileExcel.name);
-
-            res.send({ message: 'success'})
-        })
+        }else {
+            res.status(500).send({message: 'filefileExcel is undefined'})
+        }
     } catch (e){
         res.status(500).send({ error: e.message });
     }
